@@ -8885,7 +8885,6 @@ static int ufshcd_init_vreg(struct ufs_hba *hba)
 	int ret = 0;
 	struct device *dev = hba->dev;
 	struct ufs_vreg_info *info = &hba->vreg_info;
-
 	if (!info)
 		goto out;
 
