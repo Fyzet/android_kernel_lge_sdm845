@@ -2074,35 +2074,14 @@ static void __ufshcd_hibern8_release(struct ufs_hba *hba, bool no_sched)
 
 	if (!ufshcd_is_hibern8_on_idle_allowed(hba))
 		return;
+	*buf_len = be16_to_cpu(response->upiu_res.length);
 
-	hba->hibern8_on_idle.active_reqs--;
-	BUG_ON(hba->hibern8_on_idle.active_reqs < 0);
-
-	if (hba->hibern8_on_idle.active_reqs
-		|| hba->hibern8_on_idle.is_suspended
-		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
-		|| hba->lrb_in_use || hba->outstanding_tasks
-		|| hba->active_uic_cmd || hba->uic_async_done
-		|| ufshcd_eh_in_progress(hba) || no_sched)
-		return;
-
-	hba->hibern8_on_idle.state = REQ_HIBERN8_ENTER;
-	trace_ufshcd_hibern8_on_idle(dev_name(hba->dev),
-		hba->hibern8_on_idle.state);
-	/*
-	 * Scheduling the delayed work after 1 jiffies will make the work to
-	 * get schedule any time from 0ms to 1000/HZ ms which is not desirable
-	 * for hibern8 enter work as it may impact the performance if it gets
-	 * scheduled almost immediately. Hence make sure that hibern8 enter
-	 * work gets scheduled atleast after 2 jiffies (any time between
-	 * 1000/HZ ms to 2000/HZ ms).
-	 */
-	delay_in_jiffies = msecs_to_jiffies(hba->hibern8_on_idle.delay_ms);
-	if (delay_in_jiffies == 1)
-		delay_in_jiffies++;
-
-	schedule_delayed_work(&hba->hibern8_on_idle.enter_work,
-			      delay_in_jiffies);
+out_unlock:
+	hba->dev_cmd.query.descriptor = NULL;
+	mutex_unlock(&hba->dev_cmd.lock);
+out:
+	ufshcd_release(hba);
+	return err;
 }
 
 static void ufshcd_hibern8_release(struct ufs_hba *hba, bool no_sched)
