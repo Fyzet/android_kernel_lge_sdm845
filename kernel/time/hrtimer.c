@@ -864,6 +864,7 @@ static void __remove_hrtimer(struct hrtimer *timer,
 			     struct hrtimer_clock_base *base,
 			     u8 newstate, int reprogram)
 {
+	u8 state = timer->state;
 	struct hrtimer_cpu_base *cpu_base = base->cpu_base;
 
 	/* Pairs with the lockless read in hrtimer_is_queued() */
