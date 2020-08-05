@@ -1497,7 +1497,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
 	if (ret) {
 		ufshcd_set_clk_freq(hba, !scale_up);
-		return ret
+		return ret;
 	}
 
 	return ret;
