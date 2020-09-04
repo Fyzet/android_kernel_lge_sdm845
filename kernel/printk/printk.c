@@ -654,12 +654,23 @@ static ssize_t msg_print_ext_header(char *buf, size_t size,
 				    struct printk_log *msg, u64 seq)
 {
 	u64 ts_usec = msg->ts_nsec;
+	char cont = '-';
 
 	do_div(ts_usec, 1000);
 
+	/*
+	 * If we couldn't merge continuation line fragments during the print,
+	 * export the stored flags to allow an optional external merge of the
+	 * records. Merging the records isn't always neccessarily correct, like
+	 * when we hit a race during printing. In most cases though, it produces
+	 * better readable output. 'c' in the record flags mark the first
+	 * fragment of a line, '+' the following.
+	 */
+	if (msg->flags & LOG_CONT)
+		cont = (prev_flags & LOG_CONT) ? '+' : 'c';
+
 	return scnprintf(buf, size, "%u,%llu,%llu,%c;",
-		       (msg->facility << 3) | msg->level, seq, ts_usec,
-		       msg->flags & LOG_CONT ? 'c' : '-');
+		       (msg->facility << 3) | msg->level, seq, ts_usec, cont);
 }
 
 static ssize_t msg_print_ext_body(char *buf, size_t size,
@@ -1052,6 +1063,7 @@ static void __init log_buf_add_cpu(void)
 	pr_info("log_buf_len total cpu_extra contributions: %d bytes\n",
 		cpu_extra);
 	pr_info("log_buf_len min size: %d bytes\n", __LOG_BUF_LEN);
+	log_buf_len_update(cpu_extra + __LOG_BUF_LEN);
 }
 #else /* !CONFIG_SMP */
 static inline void log_buf_add_cpu(void) {}
@@ -1686,7 +1698,7 @@ static size_t cont_print_text(char *text, size_t size)
 	size_t textlen = 0;
 	size_t len;
 
-	if (cont.cons == 0) {
+	if (cont.cons == 0 && (console_prev & LOG_NEWLINE)) {
 		textlen += print_time(cont.ts_nsec, text);
 		size -= textlen;
 	}
