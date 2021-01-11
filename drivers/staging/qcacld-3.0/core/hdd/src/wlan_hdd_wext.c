@@ -8742,20 +8742,11 @@ static int __iw_setnone_getint(struct net_device *dev,
 
 	case WE_GET_NSS:
 	{
-		sme_get_config_param(hHal, sme_config);
-//LGE_CHANGE_S, 18.04.18, protocol-wifi@lge.com, Change DBS mode check in WCN399X
-//		*value = (sme_config->csrConfig.enable2x2 == 0) ? 1 : 2;
-//		if (wma_is_current_hwmode_dbs())
-//			*value = *value - 1;
-//		hdd_debug("GET_NSS: Current NSS:%d", *value);
-		if (wma_is_current_hwmode_dbs()) {
-			hdd_debug("GET_NSS: Current mode is DBS.");
-			*value = 1;
-		} else {
-			hdd_debug("GET_NSS: Current mode isn't DBS.");
-			*value = 0;
-		}
-//LGE_CHANGE_E, 18.04.18, protocol-wifi@lge.com, Change DBS mode check in WCN399X
+		sme_get_config_param(mac_handle, sme_config);
+		*value = (sme_config->csrConfig.enable2x2 == 0) ? 1 : 2;
+		if (policy_mgr_is_current_hwmode_dbs(hdd_ctx->psoc))
+			*value = *value - 1;
+		hdd_debug("GET_NSS: Current NSS:%d", *value);
 		break;
 	}
 
