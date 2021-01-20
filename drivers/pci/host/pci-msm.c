@@ -4992,20 +4992,30 @@ static struct irq_chip pcie_msi_chip = {
 	.irq_unmask = msm_unmask_msi_irq,
 };
 
-static int msm_pcie_create_irq(struct irq_domain *domain, unsigned int irq_base,
-				irq_hw_number_t hwirq_base, int count)
+static int msm_pcie_create_irq(struct msm_pcie_dev_t *dev)
 {
-	struct device_node *of_node;
-	int ret;
+	int irq, pos;
 
-	of_node = irq_domain_get_of_node(domain);
-	ret = __irq_alloc_descs(irq_base, hwirq_base, count,
-			of_node_to_nid(of_node), THIS_MODULE, NULL);
-	if (unlikely(ret < 0))
-		return ret;
+	PCIE_DBG(dev, "RC%d\n", dev->rc_idx);
 
-	irq_domain_associate_many(domain, ret, hwirq_base, count);
-	return ret;
+again:
+	pos = find_first_zero_bit(dev->msi_irq_in_use, PCIE_MSI_NR_IRQS);
+
+	if (pos >= PCIE_MSI_NR_IRQS)
+		return -ENOSPC;
+
+	PCIE_DBG(dev, "pos:%d msi_irq_in_use:%ld\n", pos, *dev->msi_irq_in_use);
+
+	if (test_and_set_bit(pos, dev->msi_irq_in_use))
+		goto again;
+	else
+		PCIE_DBG(dev, "test_and_set_bit is successful pos=%d\n", pos);
+
+	irq = irq_create_mapping(dev->irq_domain, pos);
+	if (!irq)
+		return -EINVAL;
+
+	return irq;
 }
 
 static int arch_setup_msi_irq_default(struct pci_dev *pdev,
