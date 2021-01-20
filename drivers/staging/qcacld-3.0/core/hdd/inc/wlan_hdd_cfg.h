@@ -5664,7 +5664,7 @@ enum hdd_link_speed_rpt_type {
 #define CFG_REPORT_MAX_LINK_SPEED                  "gReportMaxLinkSpeed"
 #define CFG_REPORT_MAX_LINK_SPEED_MIN              (eHDD_LINK_SPEED_REPORT_ACTUAL)
 #define CFG_REPORT_MAX_LINK_SPEED_MAX              (eHDD_LINK_SPEED_REPORT_MAX_SCALED)
-#define CFG_REPORT_MAX_LINK_SPEED_DEFAULT          (eHDD_LINK_SPEED_REPORT_ACTUAL)
+#define CFG_REPORT_MAX_LINK_SPEED_DEFAULT          (eHDD_LINK_SPEED_REPORT_MAX_SCALED)   // LGE_PATCH
 
 /*
  * <ini>
@@ -9021,7 +9021,7 @@ enum hdd_link_speed_rpt_type {
 #define CFG_SAP_11AC_OVERRIDE_NAME             "gSAP11ACOverride"
 #define CFG_SAP_11AC_OVERRIDE_MIN              (0)
 #define CFG_SAP_11AC_OVERRIDE_MAX              (1)
-#define CFG_SAP_11AC_OVERRIDE_DEFAULT          (0)
+#define CFG_SAP_11AC_OVERRIDE_DEFAULT          (1)
 
 /*
  * <ini>
